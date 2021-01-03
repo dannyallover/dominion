@@ -14,7 +14,6 @@
 #include "Defs.h"
 #include "ActionCard.h"
 #include "Pile.h"
-#include "JsonRPC.h"
 #include "RandUtils.h"
 #include "CardLookup.h"
 #include "Player.h"
@@ -84,4 +83,3 @@ int main(void) {
               << std::endl;
     return 0;
 }
-

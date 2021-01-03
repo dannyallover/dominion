@@ -8,7 +8,6 @@
 #include "CardLookup.h"
 #include "Defs.h"
 #include "GameState.h"
-#include "JsonRPC.h"
 #include "Pile.h"
 #include "Player.h"
 #include "RandUtils.h"
@@ -687,4 +686,3 @@ int main(int argc, char **argv) {
     InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-

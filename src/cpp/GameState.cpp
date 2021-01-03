@@ -11,7 +11,6 @@
 
 #include "Card.h"
 #include "ActionCard.h"
-#include "JsonRPC.h"
 #include "RandUtils.h"
 #include "GameState.h"
 #include "CardLookup.h"
@@ -94,18 +93,8 @@ int game_state::SplashScreen(void) {
 // Pick 10 random kingdom cards
 std::vector<Card> game_state::RandomizeKingdom(std::vector<Card> cardSet) {
     std::vector<Card> randCards;
-    json_rpc::JsonResponse jsonResp = json_rpc::GetJsonResult(
-                                                GEN_INTS,
-                                                KINGDOM_SIZE, MIN_IDX,
-                                                cardSet.size() - 1,
-                                                false);
-    int reqsLeft = jsonResp.m_reqsLeft;
-    std::vector<int> randVals;
-    if(reqsLeft <= 0) {
-        rand_utils::GenPseudoRandList(cardSet.size(), KINGDOM_SIZE);
-    } else {
-        randVals = jsonResp.m_randVals;
-    }
+
+    std::vector<int> randVals = rand_utils::GenPseudoRandList(cardSet.size(), KINGDOM_SIZE);
 
     for(size_t i = 0; i < randVals.size(); i++) {
         randCards.push_back(cardSet.at(randVals.at(i)));
@@ -409,4 +398,3 @@ void game_state::SetDemoCards(struct stateBlock *state) {
     tmpCard = new Card(lookup::gold);
     state->p2->AddToHand(tmpCard);
 }
-

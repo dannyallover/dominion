@@ -23,7 +23,6 @@ add_executable(dominion
     src/cpp/Card.cpp
     src/cpp/ActionCard.cpp
     src/cpp/GameState.cpp
-    src/cpp/JsonRPC.cpp
     src/cpp/Pile.cpp
     src/cpp/Player.cpp
     src/cpp/RandUtils.cpp

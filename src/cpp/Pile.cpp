@@ -11,7 +11,6 @@
 
 #include "Pile.h"
 #include "Card.h"
-#include "JsonRPC.h"
 #include "RandUtils.h"
 #include "CardLookup.h"
 #include "GameState.h"
@@ -81,18 +80,7 @@ int Pile::LookThrough(Card *card) {
 
 void Pile::TrueShuffle(void) {
     if(m_cards.size() == DEF_SIZE) { return; }
-    json_rpc:: JsonResponse response = json_rpc::GetJsonResult(GEN_INTS,
-                                    m_cards.size(), MIN_IDX, m_cards.size() - 1,
-                                    false);
-    int reqsLeft = response.m_reqsLeft;
-    std::vector<int> shuffledIdxs;
-    if(reqsLeft <= 0) {
-        // We ran out of API requests, so fall back to using rand()
-        shuffledIdxs = rand_utils::GenPseudoRandList(m_cards.size(),
-                                                     m_cards.size());
-    } else {
-        shuffledIdxs = response.m_randVals;
-    }
+    std::vector<int> shuffledIdxs = rand_utils::GenPseudoRandList(m_cards.size(), m_cards.size());
     for(size_t i = 0; i < m_cards.size(); i++) {
         Card *tmpCard = m_cards.at(i);
         m_cards.at(i) = m_cards.at(shuffledIdxs.at(i));
