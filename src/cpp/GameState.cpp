@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "Card.h"
 #include "ActionCard.h"
@@ -18,6 +19,149 @@
 #include "Pile.h"
 #include "Player.h"
 #include "Defs.h"
+
+struct GameStateVector {
+  std::string player;
+  int num_actions;
+  int num_buys;
+  int num_coins;
+  int player_score;
+  int opponent_score;
+  std::string phase;
+  std::vector<std::pair<std::string, int>> deck;
+  std::vector<std::pair<std::string, int>> hand;
+  std::vector<std::pair<std::string, int>> discard;
+  std::vector<std::pair<std::string, int>> kingdom;
+  std::vector<std::pair<std::string, int>> trash;
+};
+
+GameStateVector GetGameStateVector(Player *player1, Player *player2, std::string phase, std::vector<Pile> *kingdom, Pile *trash) {
+  GameStateVector gsv;
+  gsv.player = player1->GetName();
+  gsv.num_actions = player1->GetActions();
+  gsv.num_buys = player1->GetBuys();
+  gsv.num_coins = player1->GetCoins();
+  gsv.player_score = game_state::ScoreDeck(player1->GetDeck()) + game_state::ScoreDeck(player1->GetHand()) + game_state::ScoreDeck(player1->GetDiscard());
+  gsv.opponent_score = game_state::ScoreDeck(player2->GetDeck()) + game_state::ScoreDeck(player2->GetHand()) + game_state::ScoreDeck(player2->GetDiscard());
+  gsv.phase = phase;
+
+  auto deck = player1->GetDeck();
+  std::unordered_map<std::string, int> card_count;
+  for(auto card : deck.GetCards()) {
+    card_count[card->GetName()]++;
+  }
+  for (const auto & [ key, value ] : card_count) {
+      gsv.deck.push_back(make_pair(key, value));
+  }
+
+  auto hand = player1->GetHand();
+  std::unordered_map<std::string, int> hand_count;
+  for(auto card : hand.GetCards()) {
+    hand_count[card->GetName()]++;
+  }
+  for (const auto & [ key, value ] : hand_count) {
+      gsv.hand.push_back(make_pair(key, value));
+  }
+
+  auto discard = player1->GetDiscard();
+  std::unordered_map<std::string, int> discard_count;
+  for(auto card : discard.GetCards()) {
+    discard_count[card->GetName()]++;
+  }
+  for (const auto & [ key, value ] : discard_count) {
+      gsv.discard.push_back(make_pair(key, value));
+  }
+
+  std::unordered_map<std::string, int> kingdom_count;
+  for(auto pile : *kingdom) {
+    for(auto card : pile.GetCards()) {
+      kingdom_count[card->GetName()]++;
+    }
+  }
+  for (const auto & [ key, value ] : kingdom_count) {
+      gsv.kingdom.push_back(make_pair(key, value));
+  }
+
+  std::unordered_map<std::string, int> trash_count;
+  for(auto card : trash->GetCards()) {
+    trash_count[card->GetName()]++;
+  }
+  for (const auto & [ key, value ] : trash_count) {
+      gsv.trash.push_back(make_pair(key, value));
+  }
+
+  return gsv;
+}
+
+std::string StringifyGSV(GameStateVector gsv) {
+  std::string gsv_string;
+
+  gsv_string += "*player: " + gsv.player + "\n";
+  gsv_string += "*number of actions: " + std::to_string(gsv.num_actions) + "\n";
+  gsv_string += "*number of buys: " + std::to_string(gsv.num_buys) + "\n";
+  gsv_string += "*number of coins: " + std::to_string(gsv.num_coins) + "\n";
+  gsv_string += "*player score: " + std::to_string(gsv.player_score) + "\n";
+  gsv_string += "*opponent score: " + std::to_string(gsv.opponent_score) + "\n";
+  gsv_string += "*phase: " + gsv.phase + "\n";
+
+  int count = 1;
+  for(auto card_pair : gsv.deck) {
+    gsv_string += "*deck-card " + std::to_string(count) + ": " + card_pair.first + ", " + std::to_string(card_pair.second) + "\n";
+    count++;
+  }
+  if(count == 1) {
+    gsv_string += "*deck: empty\n";
+  }
+
+  count = 1;
+  for(auto card_pair : gsv.hand) {
+    gsv_string += "*hand-card " + std::to_string(count) + ": " + card_pair.first + ", " + std::to_string(card_pair.second) + "\n";
+    count++;
+  }
+  if(count == 1) {
+    gsv_string += "*hand: empty\n";
+  }
+
+  count = 1;
+  for(auto card_pair : gsv.discard) {
+    gsv_string += "*discard-card " + std::to_string(count) + ": " + card_pair.first + ", " + std::to_string(card_pair.second) + "\n";
+    count++;
+  }
+  if(count == 1) {
+    gsv_string += "*discard: empty\n";
+  }
+
+  count = 1;
+  for(auto card_pair : gsv.kingdom) {
+    gsv_string += "*kingdom-card " + std::to_string(count) + ": " + card_pair.first + ", " + std::to_string(card_pair.second) + "\n";
+    count++;
+  }
+  if(count == 1) {
+    gsv_string += "*kingdom: empty\n";
+  }
+
+  count = 1;
+  for(auto card_pair : gsv.trash) {
+    gsv_string += "*trash-card " + std::to_string(count) + ": " + card_pair.first + ", " + std::to_string(card_pair.second) + "\n";
+    count++;
+  }
+  if(count == 1) {
+    gsv_string += "*trash: empty\n";
+  }
+
+  return gsv_string;
+}
+
+void OutputGSV(bool p1Turn, stateBlock state, std::string phase) {
+  GameStateVector gsv;
+  if(p1Turn) {
+    gsv = GetGameStateVector(state.p1, state.p2, phase, state.kingdom, state.trash);
+  } else {
+    gsv = GetGameStateVector(state.p2, state.p1, phase, state.kingdom, state.trash);
+  }
+  std::cout << StringifyGSV(gsv);
+  return;
+}
 
 void game_state::SetColor(const char color[]) {
     std::cout << color;
@@ -154,10 +298,11 @@ void game_state::ActionPhase(struct stateBlock *state, bool p1) {
     Player *currPlayer = p1 ? state->p1 : state->p2;
     Player *otherPlayer = p1 ? state->p2 : state->p1;
     int cmd;
-    system(CLEAR); // Clear the console
+    // system(CLEAR); // Clear the console
     PromptActionPhase();
     Pile hand = currPlayer->GetHand();
     while(currPlayer->GetActions() > 0 && cmd > DEF_CHOICE) {
+        OutputGSV(p1, *state, "action");
         do {
             std::cout << "You have " << currPlayer->GetActions()
                   << " action(s) remaining." << std::endl;
@@ -219,12 +364,13 @@ void game_state::TreasurePhase(struct stateBlock *state, bool p1) {
     Player *currPlayer = p1 ? state->p1 : state->p2;
     Pile hand = currPlayer->GetHand();
     int cmd;
-    system(CLEAR); // Clear the console
+    // system(CLEAR); // Clear the console
     game_state::SetColor(YELLOW);
     std::cout << "Treasure phase: choose card(s) to play "
               << "(or -1 to skip phase):" << std::endl;
     game_state::ResetColor();
     do {
+        OutputGSV(p1, *state, "treasure");
         do {
             std::cout << "You have " << currPlayer->GetCoins()
                     << " coins(s)." << std::endl;
@@ -264,12 +410,13 @@ void game_state::TreasurePhase(struct stateBlock *state, bool p1) {
 void game_state::BuyPhase(struct stateBlock *state, bool p1) {
     Player *currPlayer = p1 ? state->p1 : state->p2;
     int idx;
-    system(CLEAR); // Clear the console
+    // system(CLEAR); // Clear the console
     game_state::SetColor(BROWN);
     std::cout << "Buy phase: choose card(s) to buy "
               << "(or -1 to skip phase):" << std::endl;
     game_state::ResetColor();
     do {
+      OutputGSV(p1, *state, "buy");
         do{
             std::cout << "1111" << std::endl;
             std::cout << "Buyable cards:" << std::endl;
@@ -316,7 +463,7 @@ void game_state::BuyPhase(struct stateBlock *state, bool p1) {
 }
 
 void game_state::CleanupPhase(struct stateBlock *state, bool p1) {
-    system(CLEAR); // Clear the console
+    // system(CLEAR); // Clear the console
     Player *currPlayer = p1 ? state->p1 : state->p2;
     game_state::SetColor(LIGHT_PURPLE);
     std::cout << "Cleanup phase: all cards in-hand and in-play "
@@ -350,7 +497,7 @@ int game_state::ScoreGardens(int numCards) {
 }
 
 bool game_state::GameOver(std::vector<Pile> &kingdomCards) {
-    system(CLEAR); // Clear the console
+    // system(CLEAR); // Clear the console
     int numEmpty = 0;
     for(size_t i = 0; i < kingdomCards.size(); i++) {
         if(kingdomCards.at(i).Size() == 0) {

@@ -39,7 +39,7 @@ int main(void) {
     state.trash     = &trash;
     state.kingdom   = &kingdomCards;
 
-    system(CLEAR);
+    // system(CLEAR);
     // int gameMode = game_state::SplashScreen();
     // if(gameMode == DEMO_GAME) {
     //     game_state::SetDemoCards(&state);
