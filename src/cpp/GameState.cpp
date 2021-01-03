@@ -94,7 +94,7 @@ int game_state::SplashScreen(void) {
 std::vector<Card> game_state::RandomizeKingdom(std::vector<Card> cardSet) {
     std::vector<Card> randCards;
 
-    std::vector<int> randVals = rand_utils::GenPseudoRandList(cardSet.size(), KINGDOM_SIZE);
+    std::vector<int> randVals = rand_utils::GenPseudoRandList(cardSet.size(), KINGDOM_SIZE, rand());
 
     for(size_t i = 0; i < randVals.size(); i++) {
         randCards.push_back(cardSet.at(randVals.at(i)));

@@ -263,7 +263,7 @@ TEST(GameState, buyPhase) {
 }
 
 TEST(RandUtils, genPseudoRandList) {
-    vector<int> pseudoRands = rand_utils::GenPseudoRandList(10, 10);
+    vector<int> pseudoRands = rand_utils::GenPseudoRandList(10, 10, rand());
     EXPECT_EQ(pseudoRands.size(), 10);
     for(size_t i = 0; i < pseudoRands.size(); i++) {
         for(size_t j = 0; j < pseudoRands.size(); j++) {

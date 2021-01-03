@@ -5,7 +5,6 @@ project(dominion)
 set(CMAKE_BUILD_TYPE debug)
 set(CMAKE_CXX_COMPILER "clang++")
 set(CMAKE_CXX_FLAGS "-Wall -Wno-trigraphs -Wpedantic -Wextra -std=c++11")
-set(CMAKE_CXX_FLAGS_DEBUG "-g -lgtest")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
 

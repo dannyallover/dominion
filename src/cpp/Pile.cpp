@@ -80,7 +80,7 @@ int Pile::LookThrough(Card *card) {
 
 void Pile::TrueShuffle(void) {
     if(m_cards.size() == DEF_SIZE) { return; }
-    std::vector<int> shuffledIdxs = rand_utils::GenPseudoRandList(m_cards.size(), m_cards.size());
+    std::vector<int> shuffledIdxs = rand_utils::GenPseudoRandList(m_cards.size(), m_cards.size(), rand());
     for(size_t i = 0; i < m_cards.size(); i++) {
         Card *tmpCard = m_cards.at(i);
         m_cards.at(i) = m_cards.at(shuffledIdxs.at(i));
