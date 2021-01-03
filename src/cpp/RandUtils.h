@@ -11,7 +11,7 @@
 #include <cstdlib>
 
 namespace rand_utils {
-    std::vector<int> GenPseudoRandList(size_t size, int max);
+    std::vector<int> GenPseudoRandList(size_t size, int max, int seed);
 }
 
 #endif

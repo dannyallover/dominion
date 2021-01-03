@@ -8,7 +8,6 @@
 #include "CardLookup.h"
 #include "Defs.h"
 #include "GameState.h"
-#include "JsonRPC.h"
 #include "Pile.h"
 #include "Player.h"
 #include "RandUtils.h"
@@ -264,7 +263,7 @@ TEST(GameState, buyPhase) {
 }
 
 TEST(RandUtils, genPseudoRandList) {
-    vector<int> pseudoRands = rand_utils::GenPseudoRandList(10, 10);
+    vector<int> pseudoRands = rand_utils::GenPseudoRandList(10, 10, rand());
     EXPECT_EQ(pseudoRands.size(), 10);
     for(size_t i = 0; i < pseudoRands.size(); i++) {
         for(size_t j = 0; j < pseudoRands.size(); j++) {
@@ -687,4 +686,3 @@ int main(int argc, char **argv) {
     InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-
