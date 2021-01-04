@@ -96,58 +96,68 @@ GameStateVector GetGameStateVector(Player *player1, Player *player2, std::string
 std::string StringifyGSV(GameStateVector gsv) {
   std::string gsv_string;
 
-  gsv_string += "*player: " + gsv.player + "\n";
-  gsv_string += "*number of actions: " + std::to_string(gsv.num_actions) + "\n";
-  gsv_string += "*number of buys: " + std::to_string(gsv.num_buys) + "\n";
-  gsv_string += "*number of coins: " + std::to_string(gsv.num_coins) + "\n";
-  gsv_string += "*player score: " + std::to_string(gsv.player_score) + "\n";
-  gsv_string += "*opponent score: " + std::to_string(gsv.opponent_score) + "\n";
-  gsv_string += "*phase: " + gsv.phase + "\n";
+  gsv_string += "@@GSV@@: \n";
+  gsv_string += "@PRELIMINARY@\n";
 
+  gsv_string += "*player: " + gsv.player + "*\n";
+  gsv_string += "*num-actions: " + std::to_string(gsv.num_actions) + "*\n";
+  gsv_string += "*num-buys: " + std::to_string(gsv.num_buys) + "*\n";
+  gsv_string += "*num-coins: " + std::to_string(gsv.num_coins) + "*\n";
+  gsv_string += "*player-score: " + std::to_string(gsv.player_score) + "*\n";
+  gsv_string += "*opponent-score: " + std::to_string(gsv.opponent_score) + "*\n";
+  gsv_string += "*phase: " + gsv.phase + "*\n";
+
+  gsv_string += "@PLAYER-DECK@\n";
   int count = 1;
   for(auto card_pair : gsv.deck) {
-    gsv_string += "*deck-card " + std::to_string(count) + ": " + card_pair.first + ", " + std::to_string(card_pair.second) + "\n";
+    gsv_string += "*" + card_pair.first + ", " + std::to_string(card_pair.second) + "*\n";
     count++;
   }
   if(count == 1) {
-    gsv_string += "*deck: empty\n";
+    gsv_string += "*empty, 0*\n";
   }
 
+  gsv_string += "@PLAYER-HAND@\n";
   count = 1;
   for(auto card_pair : gsv.hand) {
-    gsv_string += "*hand-card " + std::to_string(count) + ": " + card_pair.first + ", " + std::to_string(card_pair.second) + "\n";
+    gsv_string += "*" + card_pair.first + ", " + std::to_string(card_pair.second) + "*\n";
     count++;
   }
   if(count == 1) {
-    gsv_string += "*hand: empty\n";
+    gsv_string += "*empty, 0*\n";
   }
 
+  gsv_string += "@PLAYER-DISCARD@\n";
   count = 1;
   for(auto card_pair : gsv.discard) {
-    gsv_string += "*discard-card " + std::to_string(count) + ": " + card_pair.first + ", " + std::to_string(card_pair.second) + "\n";
+    gsv_string += "*" + card_pair.first + ", " + std::to_string(card_pair.second) + "*\n";
     count++;
   }
   if(count == 1) {
-    gsv_string += "*discard: empty\n";
+    gsv_string += "*empty, 0*\n";
   }
 
+  gsv_string += "@KINGDOM@\n";
   count = 1;
   for(auto card_pair : gsv.kingdom) {
-    gsv_string += "*kingdom-card " + std::to_string(count) + ": " + card_pair.first + ", " + std::to_string(card_pair.second) + "\n";
+    gsv_string += "*" + card_pair.first + ", " + std::to_string(card_pair.second) + "*\n";
     count++;
   }
   if(count == 1) {
-    gsv_string += "*kingdom: empty\n";
+    gsv_string += "*empty, 0*\n";
   }
 
+  gsv_string += "@TRASH@\n";
   count = 1;
   for(auto card_pair : gsv.trash) {
-    gsv_string += "*trash-card " + std::to_string(count) + ": " + card_pair.first + ", " + std::to_string(card_pair.second) + "\n";
+    gsv_string += "*" + card_pair.first + ", " + std::to_string(card_pair.second) + "*\n";
     count++;
   }
   if(count == 1) {
-    gsv_string += "*trash: empty\n";
+    gsv_string += "*empty, 0*\n";
   }
+
+  gsv_string += "@@END OF GSV@@\n";
 
   return gsv_string;
 }
