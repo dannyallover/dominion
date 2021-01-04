@@ -40,23 +40,23 @@ int main(void) {
     state.kingdom   = &kingdomCards;
 
     system(CLEAR);
-    int gameMode = game_state::SplashScreen();
-    if(gameMode == DEMO_GAME) {
-        game_state::SetDemoCards(&state);
-    }
+    // int gameMode = game_state::SplashScreen();
+    // if(gameMode == DEMO_GAME) {
+    //     game_state::SetDemoCards(&state);
+    // }
 
     // Game event loop
     while(!game_state::GameOver(kingdomCards)) {
         bool p1Turn = (currPlayer == &p1);
         int pNum = p1Turn ? P1_NUM : P2_NUM;
-        game_state::SetColor(LIGHT_BLUE);
-        std::cout << "Player " << pNum << ", begin your turn."
-                  << " (Type \"OK\" to continue.)" << std::endl;
-        game_state::ResetColor();
-        char pause;
-        std::cin >> pause;
-        lookup::ClearCinError();
-        game_state::ResetColor();
+        // game_state::SetColor(LIGHT_BLUE);
+        // std::cout << "Player " << pNum << ", begin your turn."
+        //           << " (Type \"OK\" to continue.)" << std::endl;
+        // game_state::ResetColor();
+        // char pause;
+        // std::cin >> pause;
+        // lookup::ClearCinError();
+        // game_state::ResetColor();
         game_state::ActionPhase(&state, p1Turn);
         game_state::TreasurePhase(&state, p1Turn);
         game_state::BuyPhase(&state, p1Turn);

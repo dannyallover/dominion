@@ -7,6 +7,7 @@
  */
 
 #include <iostream>
+#include <string>
 #include <vector>
 
 #include "Card.h"
@@ -161,13 +162,23 @@ void game_state::ActionPhase(struct stateBlock *state, bool p1) {
             std::cout << "You have " << currPlayer->GetActions()
                   << " action(s) remaining." << std::endl;
             hand.PrintPileAsHand();
-            std::cin >> cmd;
-            lookup::CheckInvalidChoice(hand.Size(), &cmd);
+            std::string card_name;
+            std::cin >> card_name;
+            if(card_name == "-1") {
+              cmd = DEF_CHOICE;
+            } else {
+              cmd = BAD_CHOICE;
+              for(int i = 0; i < hand.Size(); i++) {
+                if(currPlayer->GetHand().At(i)->GetName() == card_name) {
+                  cmd = i;
+                }
+              }
+            }
         } while (cmd == BAD_CHOICE);
         if(cmd > DEF_CHOICE) {
-            Card *cardPlayed = currPlayer->HandPtr()->DrawAt(cmd);
-            CardType type = cardPlayed->GetType();
+            CardType type = currPlayer->GetHand().At(cmd)->GetType();
             if(type == ACTION || type == ATTACK || type == REACTION) {
+              Card *cardPlayed = currPlayer->HandPtr()->DrawAt(cmd);
                 currPlayer->AddActions(-1);
                 game_state::HandleCardAdditions(currPlayer,
                                                 cardPlayed);
@@ -198,10 +209,10 @@ void game_state::ActionPhase(struct stateBlock *state, bool p1) {
             }
         }
     }
-    std::cout << PROMPT << std::endl;
-    char pause;
-    std::cin >> pause;
-    lookup::ClearCinError();
+    // std::cout << PROMPT << std::endl;
+    // char pause;
+    // std::cin >> pause;
+    // lookup::ClearCinError();
 }
 
 void game_state::TreasurePhase(struct stateBlock *state, bool p1) {
@@ -223,8 +234,19 @@ void game_state::TreasurePhase(struct stateBlock *state, bool p1) {
                 std::cout << i << ": " << hand.At(i)->ToString() << std::endl;
             }
             game_state::ResetColor();
-            std::cin >> cmd;
-            lookup::CheckInvalidChoice(hand.Size(), &cmd);
+            std::string card_name;
+            std::cin >> card_name;
+            std::cout << "testing1";
+            if(card_name == "-1") {
+              cmd = DEF_CHOICE;
+            } else {
+              cmd = BAD_CHOICE;
+              for(int i = 0; i < hand.Size(); i++) {
+                if(currPlayer->GetHand().At(i)->GetName() == card_name) {
+                  cmd = i;
+                }
+              }
+            }
         } while (cmd == BAD_CHOICE);
 
         if(cmd != DEF_CHOICE &&
@@ -249,6 +271,7 @@ void game_state::BuyPhase(struct stateBlock *state, bool p1) {
     game_state::ResetColor();
     do {
         do{
+            std::cout << "1111" << std::endl;
             std::cout << "Buyable cards:" << std::endl;
             for(size_t i = 0; i < state->kingdom->size(); i++) {
                 game_state::SetColorByType(state->kingdom->at(i).GetTopCard()->GetType());
@@ -264,9 +287,19 @@ void game_state::BuyPhase(struct stateBlock *state, bool p1) {
                       << " coins(s) and " << currPlayer->GetBuys()
                       << " buy(s) remaining." << std::endl;
             std:: cout << "Type a card's number to buy it." << std::endl;
-            std::cin >> idx;
-            lookup::CheckInvalidChoice(state->kingdom->size(), &idx);
-        } while(idx == BAD_CHOICE);
+            std::string card_name;
+            std::cin >> card_name;
+            if(card_name == "-1") {
+              idx = DEF_CHOICE;
+            } else {
+              idx = -2;
+              for(int i = 0; i < state->kingdom->size(); i++) {
+                if(card_name == state->kingdom->at(i).GetTopCard()->GetName()) {
+                  idx = i;
+                }
+              }
+            }
+        } while(idx == -2);
         // Buy a card if it costs <= currPlayer's coins.
         if(idx == DEF_CHOICE) {}
         else if (state->kingdom->at(idx).GetTopCard()->GetCost() <=
@@ -290,11 +323,11 @@ void game_state::CleanupPhase(struct stateBlock *state, bool p1) {
               << "discarded" << std::endl;
     game_state::ResetColor();
     currPlayer->DiscardPtr()->TakeAllFrom(currPlayer->HandPtr());
-    std::cout << "Drawing 5 new cards..." << std::endl;
-    std::cout << "Type \"OK\" to pass to your opponent." << std::endl;
-    char pause;
-    std::cin >> pause;
-    lookup::ClearCinError();
+    // std::cout << "Drawing 5 new cards..." << std::endl;
+    // std::cout << "Type \"OK\" to pass to your opponent." << std::endl;
+    // char pause;
+    // std::cin >> pause;
+    // lookup::ClearCinError();
     // Reset currPlayer's actions/buys/coins and draw 5 cards
     currPlayer->SetNewTurn();
 }
