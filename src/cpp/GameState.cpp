@@ -307,6 +307,7 @@ void game_state::ActionPhase(struct stateBlock *state, bool p1) {
             std::cout << "You have " << currPlayer->GetActions()
                   << " action(s) remaining." << std::endl;
             hand.PrintPileAsHand();
+            std::cout << "response?" << std::endl;
             std::string card_name;
             std::cin >> card_name;
             if(card_name == "-1") {
@@ -379,10 +380,11 @@ void game_state::TreasurePhase(struct stateBlock *state, bool p1) {
                 game_state::SetColorByType(hand.At(i)->GetType());
                 std::cout << i << ": " << hand.At(i)->ToString() << std::endl;
             }
+            std::cout << "response?" << std::endl;
             game_state::ResetColor();
             std::string card_name;
             std::cin >> card_name;
-            std::cout << "testing1";
+            std::cout << "testing1" << std::endl;
             if(card_name == "-1") {
               cmd = DEF_CHOICE;
             } else {
@@ -418,7 +420,6 @@ void game_state::BuyPhase(struct stateBlock *state, bool p1) {
     do {
       OutputGSV(p1, *state, "buy");
         do{
-            std::cout << "1111" << std::endl;
             std::cout << "Buyable cards:" << std::endl;
             for(size_t i = 0; i < state->kingdom->size(); i++) {
                 game_state::SetColorByType(state->kingdom->at(i).GetTopCard()->GetType());
