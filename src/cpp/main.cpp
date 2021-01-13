@@ -57,8 +57,8 @@ int main(void) {
         // std::cin >> pause;
         // lookup::ClearCinError();
         // game_state::ResetColor();
-        game_state::ActionPhase(&state, p1Turn);
-        game_state::TreasurePhase(&state, p1Turn);
+        bool played_merchant = game_state::ActionPhase(&state, p1Turn);
+        game_state::TreasurePhase(&state, p1Turn, played_merchant);
         game_state::BuyPhase(&state, p1Turn);
         game_state::CleanupPhase(&state, p1Turn);
         // Swap current player for next turn

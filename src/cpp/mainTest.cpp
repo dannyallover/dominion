@@ -84,7 +84,6 @@ TEST(PileTest, trueShuffle) {
     p2.topDeck(new ActionCard(lookup::smithy));
     p2.topDeck(new ActionCard(lookup::councilroom));
     p2.topDeck(new ActionCard(lookup::adventurer));
-    p2.topDeck(new ActionCard(lookup::woodcutter));
     p2.topDeck(new ActionCard(lookup::throneroom));
     p2.trueShuffle();
     EXPECT_NE(p2.getTopCard()->GetName(), "market");
@@ -122,7 +121,6 @@ TEST(GameState, randomizeKingdom) {
     kingdomCards.push_back(lookup::moat);
     kingdomCards.push_back(lookup::chancellor);
     kingdomCards.push_back(lookup::village);
-    kingdomCards.push_back(lookup::woodcutter);
     kingdomCards.push_back(lookup::workshop);
     kingdomCards.push_back(lookup::bureaucrat);
     kingdomCards.push_back(lookup::feast);
@@ -299,30 +297,10 @@ TEST(CardLookup, chapelEffect) {
     EXPECT_EQ(trash.size(), 4);
 }
 
-TEST(CardLookup, chancellorEffect) {
-    struct stateBlock state;
-    Player p1 = Player(1);
-    state.p1 = &p1;
-    // deck->discard
-    lookup::ChancellorEffect(&state, true);
-
-    EXPECT_EQ(p1.GetDeck().size(), 0);
-    EXPECT_EQ(p1.GetDiscard().size(), 5);
-
-    p1 = Player(1);
-    state.p1 = &p1;
-    // don't deck->discard
-    lookup::ChancellorEffect(&state, true);
-
-    EXPECT_EQ(p1.GetDeck().size(), 5);
-    EXPECT_EQ(p1.GetDiscard().size(), 0);
-}
-
 TEST(CardLookup, workshopEffect) {
     Pile chapels = Pile(KINGDOM, (Card)lookup::chapel, 10);
     Pile moats = Pile(KINGDOM, (Card)lookup::moat, 10);
     Pile chancellors = Pile(KINGDOM, (Card)lookup::chancellor, 10);
-    Pile woodcutters = Pile(KINGDOM, (Card)lookup::woodcutter, 10);
     Pile workshops = Pile(KINGDOM, (Card)lookup::workshop, 10);
     Pile thiefs = Pile(KINGDOM, (Card)lookup::thief , 10);
     Pile councilrooms = Pile(KINGDOM, (Card)lookup::councilroom, 10);
@@ -334,7 +312,6 @@ TEST(CardLookup, workshopEffect) {
     kingdomPiles.push_back(chapels);
     kingdomPiles.push_back(moats);
     kingdomPiles.push_back(chancellors);
-    kingdomPiles.push_back(woodcutters);
     kingdomPiles.push_back(workshops);
     kingdomPiles.push_back(thiefs);
     kingdomPiles.push_back(councilrooms);
@@ -383,24 +360,6 @@ TEST(CardLookup, bureaucratEffect) {
     EXPECT_EQ(p2.GetDeck().getTopCard()->GetName(), "estate");
 }
 
-TEST(CardLookup, feastEffect) {
-    Player p1 = Player(1);
-    std::vector<Pile> kingdomCards = game_state::GenerateKingdom(
-                                                 lookup::GenAllCards());
-    Pile trash = Pile(TRASH);
-    struct stateBlock state;
-    state.p1 = &p1;
-    state.kingdom = &kingdomCards;
-    state.trash = &trash;
-
-    bool trashed = lookup::FeastEffect(&state, true);
-
-    EXPECT_EQ(p1.GetDiscard().size(), 1);
-    EXPECT_LE(p1.GetDiscard().getTopCard()->GetCost(), 5);
-    EXPECT_EQ(trashed, true);
-    EXPECT_EQ(p1.GetHand().size(), 5);
-}
-
 TEST(CardLookup, militiaEffect) {
     struct stateBlock state;
     Player p1 = Player(1);
@@ -440,84 +399,6 @@ TEST(CardLookup, remodelEffect) {
     EXPECT_EQ(p1.GetDiscard().size(), 1);
     EXPECT_EQ(p1.GetDeck().size(), 5);
     EXPECT_EQ(trash.size(), 1);
-}
-
-TEST(CardLookup, spyEffect) {
-    struct stateBlock state;
-    Player p1 = Player(1);
-    Player p2 = Player(2);
-
-    state.p1 = &p1;
-    state.p2 = &p2;
-
-    // Don't discard either card
-    lookup::SpyEffect(&state, true);
-    EXPECT_EQ(p1.GetDeck().size(), 5);
-    EXPECT_EQ(p1.GetDiscard().size(), 0);
-    EXPECT_EQ(p1.GetHand().size(), 5);
-    EXPECT_EQ(p2.GetDeck().size(), 5);
-    EXPECT_EQ(p2.GetDiscard().size(), 0);
-    EXPECT_EQ(p2.GetHand().size(), 5);
-
-    // Discard both cards
-    lookup::SpyEffect(&state, true);
-    EXPECT_EQ(p1.GetDeck().size(), 4);
-    EXPECT_EQ(p1.GetDiscard().size(), 1);
-    EXPECT_EQ(p1.GetHand().size(), 5);
-    EXPECT_EQ(p2.GetDeck().size(), 4);
-    EXPECT_EQ(p2.GetDiscard().size(), 1);
-    EXPECT_EQ(p2.GetHand().size(), 5);
-}
-
-TEST(CardLookup, thiefEffect) {
-    struct stateBlock state;
-    Player p1 = Player(1);
-    Player p2 = Player(2);
-    Pile trash = Pile(TRASH);
-
-    p2.DrawCard();
-    p2.DrawCard();
-    p2.DrawCard();
-    p2.DrawCard();
-    p2.DrawCard();
-    p2.AddToDeck(new Card(lookup::copper));
-    p2.AddToDeck(new Card(lookup::copper));
-    p2.AddToDeck(new Card(lookup::copper));
-    p2.AddToDeck(new Card(lookup::copper));
-    p2.AddToDeck(new Card(lookup::copper));
-    p2.AddToDeck(new Card(lookup::copper));
-    p2.AddToDeck(new Card(lookup::copper));
-    p2.AddToDeck(new Card(lookup::copper));
-    p2.AddToDeck(new Card(lookup::copper));
-    p2.AddToDeck(new Card(lookup::copper));
-
-    state.p1 = &p1;
-    state.p2 = &p2;
-    state.trash = &trash;
-
-    EXPECT_EQ(p2.GetDiscard().size(), 0);
-    // Trash first card, discard 2nd, take trashed
-    lookup::ThiefEffect(&state, true);
-
-    EXPECT_EQ(trash.size(), 0);
-    EXPECT_EQ(p2.GetDiscard().size(), 1);
-    EXPECT_EQ(p2.GetDeck().size(), 8);
-    EXPECT_EQ(p1.GetDiscard().size(), 1);
-
-    // Trash 2nd card, discard 1st, take trashed
-    lookup::ThiefEffect(&state, true);
-
-    EXPECT_EQ(trash.size(), 0);
-    EXPECT_EQ(p2.GetDiscard().size(), 2);
-    EXPECT_EQ(p2.GetDeck().size(), 6);
-    EXPECT_EQ(p1.GetDiscard().size(), 2);
-
-    // Trash 1st card, discard 2nd, take nothing
-    lookup::ThiefEffect(&state, true);
-    EXPECT_EQ(trash.size(), 1);
-    EXPECT_EQ(p2.GetDiscard().size(), 3);
-    EXPECT_EQ(p2.GetDeck().size(), 4);
-    EXPECT_EQ(p1.GetDiscard().size(), 2);
 }
 
 TEST(CardLookup, throneroomEffect) {
@@ -620,32 +501,6 @@ TEST(CardLookup, witchEffect) {
     lookup::WitchEffect(&state, true);
     EXPECT_EQ(p2.GetDiscard().size(), 1);
     EXPECT_EQ(p2.GetDiscard().getTopCard()->GetName(), "curse");
-}
-
-TEST(CardLookup, adventurerEffect) {
-    struct stateBlock state;
-    Player p1 = Player(1);
-    for(int i = 0; i < 5; i++) {
-        p1.DiscardCard(0);
-    }
-    EXPECT_EQ(p1.GetDeck().size(), 5);
-    p1.AddToDeck(new Card(lookup::silver));
-    p1.AddToDeck(new Card(lookup::estate));
-    p1.AddToDeck(new Card(lookup::estate));
-    p1.AddToDeck(new Card(lookup::estate));
-    p1.AddToDeck(new Card(lookup::gold));
-
-    EXPECT_EQ(p1.GetDeck().size(), 10);
-    EXPECT_EQ(p1.GetHand().size(), 0);
-    EXPECT_EQ(p1.GetDiscard().size(), 5);
-
-    state.p1 = &p1;
-
-    lookup::AdventurerEffect(&state, true);
-    EXPECT_EQ(p1.GetHand().size(), 2);
-    EXPECT_EQ(p1.GetDeck().size(), 5);
-    EXPECT_EQ(p1.GetHand().at(0)->GetName(), "gold");
-    EXPECT_EQ(p1.GetHand().at(1)->GetName(), "silver");
 }
 
 TEST(Player, drawCard) {

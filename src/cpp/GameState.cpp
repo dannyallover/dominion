@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <ctime>
 
 #include "Card.h"
 #include "ActionCard.h"
@@ -249,7 +250,7 @@ int game_state::SplashScreen(void) {
 std::vector<Card> game_state::RandomizeKingdom(std::vector<Card> cardSet) {
     std::vector<Card> randCards;
 
-    std::vector<int> randVals = rand_utils::GenPseudoRandList(cardSet.size(), KINGDOM_SIZE, rand());
+    std::vector<int> randVals = rand_utils::GenPseudoRandList(cardSet.size(), KINGDOM_SIZE, time(0));
 
     for(size_t i = 0; i < randVals.size(); i++) {
         randCards.push_back(cardSet.at(randVals.at(i)));
@@ -304,10 +305,11 @@ std::vector<Pile> game_state::GenerateKingdom(std::vector<Card> cardSet) {
     return kingdomPiles;
 }
 
-void game_state::ActionPhase(struct stateBlock *state, bool p1) {
+bool game_state::ActionPhase(struct stateBlock *state, bool p1) {
     Player *currPlayer = p1 ? state->p1 : state->p2;
     Player *otherPlayer = p1 ? state->p2 : state->p1;
     int cmd;
+    bool played_merchant = false;
     // system(CLEAR); // Clear the console
     PromptActionPhase();
     Pile hand = currPlayer->GetHand();
@@ -336,6 +338,9 @@ void game_state::ActionPhase(struct stateBlock *state, bool p1) {
             if(type == ACTION || type == ATTACK || type == REACTION) {
               Card *cardPlayed = currPlayer->HandPtr()->DrawAt(cmd);
                 currPlayer->AddActions(-1);
+                if(cardPlayed->GetName() == "merchant") {
+                  played_merchant = true;
+                }
                 game_state::HandleCardAdditions(currPlayer,
                                                 cardPlayed);
                 bool trashedSelf = false;
@@ -365,13 +370,10 @@ void game_state::ActionPhase(struct stateBlock *state, bool p1) {
             }
         }
     }
-    // std::cout << PROMPT << std::endl;
-    // char pause;
-    // std::cin >> pause;
-    // lookup::ClearCinError();
+    return played_merchant;
 }
 
-void game_state::TreasurePhase(struct stateBlock *state, bool p1) {
+void game_state::TreasurePhase(struct stateBlock *state, bool p1, bool merchant) {
     Player *currPlayer = p1 ? state->p1 : state->p2;
     Pile hand = currPlayer->GetHand();
     int cmd;
@@ -411,7 +413,12 @@ void game_state::TreasurePhase(struct stateBlock *state, bool p1) {
           currPlayer->GetHand().At(cmd)->GetType() == TREASURE_C) {
             // If a card is a treasure card, add its +coins
             Card *cardPlayed = currPlayer->GetHand().At(cmd);
-            currPlayer->AddCoins(cardPlayed->GetCoins());
+            if(cardPlayed->GetName() == "silver" && merchant) {
+              currPlayer->AddCoins(cardPlayed->GetCoins() + 1);
+              merchant = false;
+            } else {
+              currPlayer->AddCoins(cardPlayed->GetCoins());
+            }
             // and then discard it.
             currPlayer->DiscardCard(cmd);
             hand = currPlayer->GetHand();

@@ -46,8 +46,8 @@ namespace game_state {
     int SplashScreen(void);
     std::vector<Card> RandomizeKingdom(std::vector<Card> cardSet);
     std::vector<Pile> GenerateKingdom(std::vector<Card> cardSet);
-    void ActionPhase(struct stateBlock *state, bool p1);
-    void TreasurePhase(struct stateBlock *state, bool p1);
+    bool ActionPhase(struct stateBlock *state, bool p1);
+    void TreasurePhase(struct stateBlock *state, bool p1, bool merchant);
     void BuyPhase(struct stateBlock *state, bool p1);
     void CleanupPhase(struct stateBlock *state, bool p1);
     int ScoreDeck(Pile playerPile);

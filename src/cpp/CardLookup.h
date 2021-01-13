@@ -58,21 +58,22 @@ namespace lookup {
     /* ACTION EFFECTS */
     bool CellarEffect(struct stateBlock *state, bool p1);
     bool ChapelEffect(struct stateBlock *state, bool p1);
-    bool ChancellorEffect(struct stateBlock *state, bool p1);
+    bool HarbingerEffect(struct stateBlock *state, bool p1);
+    bool VassalEffect(struct stateBlock *state, bool p1);
     bool WorkshopEffect(struct stateBlock *state, bool p1);
     bool BureaucratEffect(struct stateBlock *state, bool p1);
-    bool FeastEffect(struct stateBlock *state, bool p1);
     bool MilitiaEffect(struct stateBlock *state, bool p1);
     bool MoneylenderEffect(struct stateBlock *state, bool p1);
+    bool PoacherEffect(struct stateBlock *state, bool p1);
     bool RemodelEffect(struct stateBlock *state, bool p1);
-    bool SpyEffect(struct stateBlock *state, bool p1);
-    bool ThiefEffect(struct stateBlock *state, bool p1);
     bool ThroneroomEffect(struct stateBlock *state, bool p1);
+    bool BanditEffect(struct stateBlock *state, bool p1);
     bool CouncilroomEffect(struct stateBlock *state, bool p1);
     bool LibraryEffect(struct stateBlock *state, bool p1);
     bool MineEffect(struct stateBlock *state, bool p1);
+    bool SentryEffect(struct stateBlock *state, bool p1);
     bool WitchEffect(struct stateBlock *state, bool p1);
-    bool AdventurerEffect(struct stateBlock *state, bool p1);
+    bool ArtisanEffect(struct stateBlock *state, bool p1);
 
     /* VICTORY CARDS */
     const VictoryCard estate   = VictoryCard(2, 1, "estate", VICTORY);
@@ -96,11 +97,13 @@ namespace lookup {
                                   NULL, REACTION, MOAT_INFO);
 
     /* COST 3 */
-    const ActionCard chancellor = ActionCard(3,0,0,0,3,"chancellor",
-                                  ChancellorEffect, ACTION, CHANCELLOR_INFO);
-    const ActionCard village = ActionCard(3,2,0,1,0,"village",
+    const ActionCard harbinger = ActionCard(3,2,0,1,0,"harbinger",
+                                  HarbingerEffect, ACTION, HARBINGER_INFO);
+    const ActionCard merchant = ActionCard(3,1,0,1,0,"merchant",
                                   NULL, ACTION);
-    const ActionCard woodcutter = ActionCard(3,0,1,0,2,"woodcutter",
+    const ActionCard vassal = ActionCard(3,0,0,0,2,"vassal",
+                                  VassalEffect, ACTION, VASSAL_INFO);
+    const ActionCard village = ActionCard(3,2,0,1,0,"village",
                                   NULL, ACTION);
     const ActionCard workshop = ActionCard(3,0,0,0,0,"workshop",
                                   WorkshopEffect, ACTION, WORKSHOP_INFO);
@@ -108,26 +111,24 @@ namespace lookup {
     /* COST 4 */
     const ActionCard bureaucrat = ActionCard(4,0,0,0,0,"bureaucrat",
                                   BureaucratEffect, ATTACK, BUREAUCRAT_INFO);
-    const ActionCard feast = ActionCard(4,0,0,0,0,"feast",
-                                  FeastEffect, ACTION, FEAST_INFO);
     const VictoryCard gardens = VictoryCard(4,0,"gardens", VICTORY,
                                             GARDENS_INFO);
     const ActionCard militia = ActionCard(4,0,0,0,2,"militia",
                                   MilitiaEffect, ATTACK, MILITIA_INFO);
     const ActionCard moneylender = ActionCard(4,0,0,0,0,"moneylender",
                                   MoneylenderEffect, ACTION, MONEYLENDER_INFO);
+    const ActionCard poacher = ActionCard(4,1,0,1,1,"poacher",
+                                  PoacherEffect, ACTION, POACHER_INFO);
     const ActionCard remodel = ActionCard(4,0,0,0,0,"remodel",
                                   RemodelEffect, ACTION, REMODEL_INFO);
     const ActionCard smithy = ActionCard(4,0,0,3,0,"smithy",
                                   NULL, ACTION);
-    const ActionCard spy = ActionCard(4,1,0,1,0,"spy",
-                                  SpyEffect, ATTACK, SPY_INFO);
-    const ActionCard thief = ActionCard(4,0,0,0,0,"thief",
-                                  ThiefEffect, ATTACK, THIEF_INFO);
     const ActionCard throneroom = ActionCard(4,0,0,0,0,"throneroom",
                                   ThroneroomEffect, ACTION, THRONEROOM_INFO);
 
     /* COST 5 */
+    const ActionCard bandit = ActionCard(5,0,0,0,0,"bandit",
+                                  BanditEffect, ACTION, BANDIT_INFO);
     const ActionCard councilroom = ActionCard(5,0,1,4,0,"councilroom",
                                   CouncilroomEffect, ACTION, COUNCILROOM_INFO);
     const ActionCard festival = ActionCard(5,2,1,0,2,"festival",
@@ -139,12 +140,16 @@ namespace lookup {
     const ActionCard market = ActionCard(5,1,1,1,1,"market", NULL, ACTION);
     const ActionCard mine = ActionCard(5,0,0,0,0,"mine",
                                   MineEffect, ACTION, MINE_INFO);
+// ActionCard::ActionCard(int cost, int actions, int buys, int cards,
+//                                                          int coins, std::string name,
+    const ActionCard sentry = ActionCard(5,1,0,1,0,"sentry",
+                                  SentryEffect, ACTION, SENTRY_INFO);
     const ActionCard witch = ActionCard(5,0,0,2,0,"witch",
                                   WitchEffect, ATTACK, WITCH_INFO);
 
     /* COST 6 */
-    const ActionCard adventurer = ActionCard(6,0,0,0,0,"adventurer",
-                                  AdventurerEffect, ACTION, ADVENTURER_INFO);
+    const ActionCard artisan = ActionCard(6,0,0,0,0,"artisan",
+                                  ArtisanEffect, ACTION, ARTISAN_INFO);
 
     /* DUMMY */
     const Card dummy = Card(DEF_COST, DEF_NAME);
@@ -155,4 +160,3 @@ namespace lookup {
 }
 
 #endif
-

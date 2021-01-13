@@ -10,6 +10,7 @@
 #include <vector>
 #include <iostream>
 #include <limits>
+#include <unordered_map>
 #include "CardLookup.h"
 
 /* Clears cin of error flags and flushes the stdin buffer */
@@ -81,21 +82,44 @@ bool lookup::ChapelEffect(struct stateBlock *state, bool p1) {
     return false;
 }
 
-bool lookup::ChancellorEffect(struct stateBlock *state, bool p1) {
-    Pile *discard = p1 ? state->p1->DiscardPtr() : state->p2->DiscardPtr();
-    Pile *deck = p1 ? state->p1->DeckPtr() : state->p2->DeckPtr();
-    std::string cmd;
-    std::cout << "Put deck -> discard? (y/n) ";
-    std::cin >> cmd;
-    if(cmd == YES) {
-        discard->TakeAllFrom(deck);
-        std::cout << std::endl
-                  << "Discarded deck." << std::endl;
-    } else {
-        std::cout << std::endl
-                  << "Keeping deck." << std::endl;
+bool lookup::HarbingerEffect(struct stateBlock *state, bool p1) {
+  Pile *discard = p1 ? state->p1->DiscardPtr() : state->p2->DiscardPtr();
+  Pile *deck = p1 ? state->p1->DeckPtr() : state->p2->DeckPtr();
+
+  std::string card_name;
+  while(card_name != "-1") {
+    std::cout << "Choose a card to place on top of your deck:" << std::endl;
+    std::cout << "Type -1 if you don't want to select a card." << std::endl;
+    discard->PrintPileAsHand();
+
+    std::cin >> card_name;
+    int index = 0;
+    for(auto card : discard->GetCards()) {
+      if(card_name == card->GetName()) {
+        discard->Move(index, deck);
+        return false;
+      }
+      index++;
     }
-    return false;
+  }
+  return false;
+}
+
+bool lookup::VassalEffect(struct stateBlock *state, bool p1) {
+  Player *currPlayer = p1 ? state->p1 : state->p2;
+  Pile *deck = p1 ? state->p1->DeckPtr() : state->p2->DeckPtr();
+  auto drawn_card = deck->DrawTopCard();
+  if(drawn_card->GetType() == ACTION) {
+    std::cout << "The card you drew is: " << drawn_card->GetName() << std::endl;
+    std::cout << "Enter 1 if you want to play the card." << std::endl;
+    int response;
+    std::cin >> response;
+    if(response == 1) {
+      drawn_card->PlayEffect(state, p1);
+    }
+  }
+  currPlayer->AddToDiscard(drawn_card);
+  return false;
 }
 
 bool lookup::WorkshopEffect(struct stateBlock *state, bool p1) {
@@ -145,31 +169,6 @@ bool lookup::BureaucratEffect(struct stateBlock *state, bool p1) {
     return false;
 }
 
-bool lookup::FeastEffect(struct stateBlock *state, bool p1) {
-    //Trash self
-    //Gain card costing up to 5
-    Player *currPlayer = p1 ? state->p1 : state->p2;
-    std::cout << "Gain a card costing up to $5:" << std::endl;
-    std::vector<Pile> *kingdom = state->kingdom;
-    for(size_t i = 0; i < kingdom->size(); i++) {
-        std::cout << i << ": "
-                  << kingdom->at(i).GetTopCard()->ToString() << std::endl;
-    }
-    int idx = DEF_CHOICE;
-    while(idx < 0) {
-        std::cin >> idx;
-        CheckInvalidChoice(kingdom->size(), &idx);
-        if(kingdom->at(idx).GetTopCard()->GetCost() > LIM_FEAST) {
-            std::cout << "Invalid choice. Card must cost <= $5."
-                      << std::endl;
-            idx = DEF_CHOICE;
-        } else {
-            currPlayer->AddToDiscard(kingdom->at(idx).DrawTopCard());
-        }
-    }
-    return true;
-}
-
 bool lookup::MilitiaEffect(struct stateBlock *state, bool p1) {
     // Opponent discards down to 3 cards
     Player *otherPlayer = p1 ? state->p2 : state->p1;
@@ -205,6 +204,41 @@ bool lookup::MoneylenderEffect(struct stateBlock *state, bool p1) {
     return false;
 }
 
+bool lookup::PoacherEffect(struct stateBlock *state, bool p1) {
+  std::vector<Pile> *kingdom = state->kingdom;
+
+  std::unordered_map<std::string, int> kingdom_count;
+  for(auto pile : *kingdom) {
+    for(auto card : pile.GetCards()) {
+      kingdom_count[card->GetName()]++;
+    }
+  }
+
+  int num_to_discard = 17 - kingdom_count.size();
+
+  while(num_to_discard > 0) {
+    Pile *hand = p1 ? state->p1->HandPtr() : state->p2->HandPtr();
+    Pile *discard = p1 ? state->p1->DiscardPtr() : state->p2->DiscardPtr();
+
+    std::cout << "Here is your hand:" << std::endl;
+    hand->PrintPileAsHand();
+    std::cout << "Choose a card to discard:" << std::endl;
+
+    std::string card_name;
+    std::cin >> card_name;
+    int index = 0;
+    for(auto card : hand->GetCards()) {
+      if(card_name == card->GetName()) {
+        hand->Move(index, discard);
+        num_to_discard--;
+        break;
+      }
+      index++;
+    }
+  }
+  return false;
+}
+
 bool lookup::RemodelEffect(struct stateBlock *state, bool p1) {
     // Trash a card and gain a card costing up to $2 more than it
     Player *currPlayer = p1 ? state->p1 : state->p2;
@@ -234,99 +268,6 @@ bool lookup::RemodelEffect(struct stateBlock *state, bool p1) {
         }
     }
     currPlayer->AddToDiscard(kingdom->at(idx).DrawTopCard());
-    return false;
-}
-
-bool lookup::SpyEffect(struct stateBlock *state, bool p1) {
-    // all players reveal top card of deck and either discard
-    // or put back, your choice
-    Player *currPlayer = p1 ? state->p1 : state->p2;
-    Player *otherPlayer = p1 ? state->p2 : state->p1;
-    std::string cmd;
-    Card *currCard = currPlayer->GetDeck().GetTopCard();
-    Card *otherCard = otherPlayer->GetDeck().GetTopCard();
-    std::cout << "Your top card: " << currCard->GetName() << std::endl;
-    std::cout << "Opponent's top card: " << otherCard->GetName() << std::endl;
-    std::cout << std::endl << "Discard your card? (y/n)" << std::endl;
-    std::cin >> cmd;
-    if(cmd == YES) {
-        currPlayer->DeckPtr()->Move(currPlayer->DeckPtr()->Size() - 1,
-                                    currPlayer->DiscardPtr());
-    }
-    std::cout << std::endl << "Discard your opponent's card? (y/n)" << std::endl;
-    std::cin >> cmd;
-    if(cmd == YES) {
-        otherPlayer->DeckPtr()->Move(otherPlayer->DeckPtr()->Size() - 1,
-                                     otherPlayer->DiscardPtr());
-    }
-    return false;
-}
-
-bool lookup::ThiefEffect(struct stateBlock *state, bool p1) {
-    // Other player reveals top 2 cards of deck, trashes one
-    // of your choice if a treasure, and then discards the other.
-    // You may gain the trashed card if you wish.
-    Player *currPlayer = p1 ? state->p1 : state->p2;
-    Player *otherPlayer = p1 ? state->p2 : state->p1;
-    Pile *trash = state->trash;
-    std::string cmd;
-    Card *otherCard1 = otherPlayer->DeckPtr()->DrawTopCard();
-    Card *otherCard2 = otherPlayer->DeckPtr()->DrawTopCard();
-    std::cout << "Opponent's top 2 cards: " << std::endl
-              << otherCard1->GetName() << std::endl
-              << otherCard2->GetName() << std::endl;
-    bool trashed = false;
-    if(otherCard1->GetType() == TREASURE_C) {
-        std::cout << "Trash " << otherCard1->GetName() << "? (y/n)"
-                  << std::endl;
-        std::cin >> cmd;
-        if(cmd == YES) {
-            // Trash and optionally gain the first card?
-            trashed = true;
-            std::cout << "Do you wish to gain the trashed card? (y/n)"
-                      << std::endl;
-            std::cin >> cmd;
-            if(cmd == YES) {
-                currPlayer->AddToDiscard(otherCard1);
-            } else {
-                trash->TopDeck(otherCard1);
-            }
-            // Discard the 2nd card, since we already trashed one
-            otherPlayer->AddToDiscard(otherCard2);
-            return false;
-        } else {
-            // If we choose not to trash, discard the card
-            otherPlayer->AddToDiscard(otherCard1);
-        }
-    } else {
-        // If the first card is not a treasure, we must discard it
-        otherPlayer->AddToDiscard(otherCard1);
-    }
-
-    // If the 2nd card is a treasure and we didn't trash the first one,
-    // we may choose to trash it
-    if(otherCard2->GetType() == TREASURE_C && !trashed) {
-        std::cout << "Trash " << otherCard2->GetName() << "? (y/n)"
-                  << std::endl;
-        std::cin >> cmd;
-        if(cmd == YES) {
-            // Trash and optionally gain the first card?
-            trashed = true;
-            std::cout << "Do you wish to gain the trashed card? (y/n)"
-                      << std::endl;
-            std::cin >> cmd;
-            if(cmd == YES) {
-                currPlayer->AddToDiscard(otherCard2);
-            } else {
-                trash->TopDeck(otherCard2);
-            }
-        } else {
-            otherPlayer->AddToDiscard(otherCard2);
-        }
-    } else {
-        // If the second card is not a treasure, we must discard it
-        otherPlayer->AddToDiscard(otherCard2);
-    }
     return false;
 }
 
@@ -365,6 +306,53 @@ bool lookup::ThroneroomEffect(struct stateBlock *state, bool p1) {
         currPlayer->DiscardCard(idx);
     }
     return false;
+}
+
+bool lookup::BanditEffect(struct stateBlock *state, bool p1) {
+  Player *currPlayer = p1 ? state->p1 : state->p2;
+  Pile *discard = p1 ? state->p1->DiscardPtr() : state->p2->DiscardPtr();
+  std::vector<Pile> *kingdom = state->kingdom;
+
+  for(size_t i = 0; i < kingdom->size(); i++) {
+      if(kingdom->at(i).GetTopCard()->GetName() == "gold") {
+        kingdom->at(i).Move(0, discard);
+      }
+  }
+
+  Player *otherPlayer = p1 ? state->p2 : state->p1;
+  Pile *trash = state->trash;
+  std::string cmd;
+  Card *otherCard1 = otherPlayer->DeckPtr()->DrawTopCard();
+  Card *otherCard2 = otherPlayer->DeckPtr()->DrawTopCard();
+  std::cout << "Opponent's top 2 cards: " << std::endl
+            << otherCard1->GetName() << std::endl
+            << otherCard2->GetName() << std::endl;
+
+  if(otherCard1->GetType() != TREASURE_C && otherCard2->GetType() != TREASURE_C) {
+    std::cout << "Select the treasure to trash: " << std::endl;
+    std::string card_name;
+    std::cin >> card_name;
+    if(otherCard1->GetName() == card_name) {
+      trash->TopDeck(otherCard1);
+      otherPlayer->AddToDiscard(otherCard2);
+      return false;
+    }
+    if(otherCard2->GetName() == card_name) {
+      trash->TopDeck(otherCard2);
+      otherPlayer->AddToDiscard(otherCard1);
+      return false;
+    }
+  } else if(otherCard1->GetType() == TREASURE_C && otherCard1->GetName() != "copper") {
+    trash->TopDeck(otherCard1);
+    otherPlayer->AddToDiscard(otherCard2);
+  } else if(otherCard2->GetType() == TREASURE_C && otherCard1->GetName() != "copper") {
+    trash->TopDeck(otherCard2);
+    otherPlayer->AddToDiscard(otherCard1);
+  } else {
+    otherPlayer->AddToDiscard(otherCard1);
+    otherPlayer->AddToDiscard(otherCard2);
+  }
+  return false;
 }
 
 bool lookup::CouncilroomEffect(struct stateBlock *state, bool p1) {
@@ -445,6 +433,80 @@ bool lookup::MineEffect(struct stateBlock *state, bool p1) {
     return false;
 }
 
+bool lookup::SentryEffect(struct stateBlock *state, bool p1) {
+  Pile *deck = p1 ? state->p1->DeckPtr() : state->p2->DeckPtr();
+  Pile *discard = p1 ? state->p1->DiscardPtr() : state->p2->DiscardPtr();
+  Pile *trash = p1 ? state->trash : state->trash;
+
+  int size = deck->Size();
+  auto card1 = deck->DrawAt(size - 1);
+  auto card2 = deck->DrawAt(size - 1);
+  bool resolved1 = false;
+  bool resolved2 = false;
+
+  std::cout << "Here are the top two cards:" << std::endl;
+  std::cout << card1->GetName() << std::endl;
+  std::cout << card2->GetName() << std::endl;
+
+  while(!resolved1 || !resolved2) {
+    std::cout << "Type a card name to trash; Type -1 if no trash." << std::endl;
+    std::string card_name;
+    std::cin >> card_name;
+    if(card_name == "-1") {
+      break;
+    }
+    if(card_name == card1->GetName() && !resolved1) {
+      trash->TopDeck(card1);
+      resolved1 = true;
+    }
+    if(card_name == card2->GetName() && !resolved2) {
+      trash->TopDeck(card2);
+      resolved2 = true;
+    }
+  }
+
+  while(!resolved1 || !resolved2) {
+    std::cout << "Type a card name to discard; Type -1 if no discard." << std::endl;
+    std::string card_name;
+    std::cin >> card_name;
+    if(card_name == "-1") {
+      break;
+    }
+    if(card_name == card1->GetName() && !resolved1) {
+      discard->TopDeck(card1);
+      resolved1 = true;
+    }
+    if(card_name == card2->GetName() && !resolved2) {
+      discard->TopDeck(card2);
+      resolved2 = true;
+    }
+  }
+
+  while(!resolved1 && !resolved2) {
+    std::cout << "Type a card name to put back on deck" << std::endl;
+    std::string card_name;
+    std::cin >> card_name;
+    if(card_name == card1->GetName() && !resolved1) {
+      deck->TopDeck(card1);
+      resolved1 = true;
+    }
+    if(card_name == card2->GetName() && !resolved2) {
+      deck->TopDeck(card2);
+      resolved2 = true;
+    }
+  }
+
+  if(!resolved1 && resolved2) {
+    deck->TopDeck(card1);
+  }
+
+  if(!resolved2 && resolved1) {
+    deck->TopDeck(card2);
+  }
+
+  return false;
+}
+
 bool lookup::WitchEffect(struct stateBlock *state, bool p1) {
     // Opponent gains 1 curse
     Pile *otherDiscard = p1 ? state->p2->DiscardPtr()
@@ -457,21 +519,37 @@ bool lookup::WitchEffect(struct stateBlock *state, bool p1) {
     return false;
 }
 
-bool lookup::AdventurerEffect(struct stateBlock *state, bool p1) {
-    // Reveal cards from your deck until you find 2 treasures.
-    // Put the treasures in-hand and discard the other cards.
-    Player *currPlayer = p1 ? state->p1 : state->p2;
-    int treasureCount = 0;
-    while(treasureCount < LIM_ADVENTURER) {
-        Card *tmpCard = currPlayer->DeckPtr()->DrawTopCard();
-        if(tmpCard->GetType() == TREASURE_C) {
-            treasureCount++;
-            currPlayer->AddToHand(tmpCard);
-        } else {
-            currPlayer->AddToDiscard(tmpCard);
-        }
-    }
-    return false;
+bool lookup::ArtisanEffect(struct stateBlock *state, bool p1) {
+  // Trash a card and gain a card costing up to $2 more than it
+  Player *currPlayer = p1 ? state->p1 : state->p2;
+  Pile *discard = state->p1->DiscardPtr();
+  std::vector<Pile> *kingdom = state->kingdom;
+
+  int idx = DEF_CHOICE;
+  std::cout << "Put a card from your hand onto your deck." << std::endl;
+  currPlayer->GetHand().PrintPileAsHand();
+  while(idx < 0) {
+      std::cin >> idx;
+      CheckInvalidChoice(currPlayer->GetHand().Size(), &idx);
+  }
+  currPlayer->HandPtr()->Move(idx, discard);
+
+
+  for(size_t i = 0; i < kingdom->size(); i++) {
+      std::cout << i << ": " << kingdom->at(i).GetTopCard()->ToString()
+                << std::endl;
+  }
+  while(idx < 0) {
+      std::cout << "Choose a card from the kingdom costing up to $"
+                << 5 << ":" << std::endl;
+      std::cin >> idx;
+      CheckInvalidChoice(kingdom->size(), &idx);
+      if(kingdom->at(idx).GetTopCard()->GetCost() > 5) {
+          idx = DEF_CHOICE;
+      }
+  }
+  currPlayer->AddToDiscard(kingdom->at(idx).DrawTopCard());
+  return false;
 }
 
 std::vector<Card> lookup::GenAllCards(void) {
@@ -481,31 +559,32 @@ std::vector<Card> lookup::GenAllCards(void) {
     allCards.push_back((lookup::chapel));
     allCards.push_back((lookup::moat));
 
-    allCards.push_back((lookup::chancellor));
+    allCards.push_back((lookup::harbinger));
+    allCards.push_back((lookup::merchant));
+    allCards.push_back((lookup::vassal));
     allCards.push_back((lookup::village));
-    allCards.push_back((lookup::woodcutter));
     allCards.push_back((lookup::workshop));
 
     allCards.push_back((lookup::bureaucrat));
-    allCards.push_back((lookup::feast));
     allCards.push_back((lookup::gardens));
     allCards.push_back((lookup::militia));
     allCards.push_back((lookup::moneylender));
+    allCards.push_back((lookup::poacher));
     allCards.push_back((lookup::remodel));
     allCards.push_back((lookup::smithy));
-    allCards.push_back((lookup::spy));
-    allCards.push_back((lookup::thief));
     allCards.push_back((lookup::throneroom));
 
+    allCards.push_back((lookup::bandit));
     allCards.push_back((lookup::councilroom));
     allCards.push_back((lookup::festival));
     allCards.push_back((lookup::laboratory));
     allCards.push_back((lookup::library));
     allCards.push_back((lookup::market));
     allCards.push_back((lookup::mine));
+    allCards.push_back((lookup::sentry));
     allCards.push_back((lookup::witch));
 
-    allCards.push_back((lookup::adventurer));
+    allCards.push_back((lookup::artisan));
 
     return allCards;
 }

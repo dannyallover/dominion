@@ -71,7 +71,9 @@ def main():
 
     input = ResolveInput(process)
     gsm = InputToGameStateMap(input)
+    print("printing game state map")
     PrintGameStateMap(gsm)
+    print("printing game state map")
     RespondToEngine(process, "copper") # dummy copper for now
 
 main()
